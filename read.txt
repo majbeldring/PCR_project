@@ -1,0 +1,52 @@
+
+# Maj Beldring, majbh@sund.ku.dk
+# UCPH 2020
+# PCR project
+
+#----------------------------------------
+# ?
+
+## Other AB includes also diagnoses with doubt of AB treatments
+## tSCC disregared for now (future study - IMI cutoff ? More stable models)
+## other AB treatments is only in the dryoff period - should daysi prior dryoff be included?
+## CNS: Should this be a major? Even though limit for treat is <32; individual coloumn?
+## Major: four pahtogens included - more?
+## SCC: more than just the last and first SCC measure? average of two? (create 2 new coloumns)
+## loosing a lot of obs with: 
+# df8 <- df8 %>% 
+#  filter(DRYTREAT_DATE < CALVING_DATE |is.na(DRYTREAT_DATE)) %>%
+#  filter(DRYTREAT_DATE >= DRYOFF_DATE |is.na(DRYTREAT_DATE))
+
+#---------------------------------------
+# To Do
+
+## PCR_report: Based on PCR_dryoff script
+## PCR_dryoff: Based on PCR (pcr, pcr_all), Treatments (teat, other, dryoff), dryoff date, calving outcome, calving date. 150 days prior calving. Not production
+
+## PCR_test1: double randomized
+## PCR_test2: Group final data by parity=2, breed=holstein. Choose max 1000 observations
+
+## include previous lactation length
+## Take the two first SCC and two last instead of only the first..
+
+## test how treatments should be added. We now have three treatment scripts; dry, teat, other
+# dry + vetpcr should still be merged
+# teat + other merging afterwards?
+
+#-----------------------------------------
+# overview of scripts
+
+# 1: PCR_clean: Load and basic cleaning raw data
+# 2: PCR_prepare: Steps between clean & merge; selecting PCR & teatment data
+# 3: PCR_merge: Merging scripts to full final data
+# 4: PCR_descriptive: Descriptive analysis & population description on full data
+# 5: PCR_visualizing: Visualizing full data and variables of interest
+# 6: PCR_analysis: glm, lm and stan_glm on full data
+# 7: PCR_jags: Initial model testing
+# 8: PCR_test1: Double randomized test data from full data; max 1000 observations
+# 9: PCR_test2: Test data from full data: 5-6 herds; eco + con; Holstein; Parity 2
+# 10: PCR_dryoff: Include all tests and treatments 150 days prior calving + descriptives
+# 11: PCR_misc: Misc tests & analysis
+# 12: PCR_teat: to be deleted: Include the teat treatments in _prepare
+# 13: PCR_report: R for PCR_report.Rmd (load PCR_prepare and PCR_merge)
+

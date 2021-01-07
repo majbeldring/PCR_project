@@ -1,0 +1,141 @@
+---
+title: "Descriptive analysis of PCR testing for treatments at dry-off"
+author: "Maj Beldring"
+date: "24/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE} 
+# Packages
+library(epitools)
+library(Publish)
+library(tidyverse)
+library(bit64) # for correctly loading sunklinreg
+library(data.table) # for using fread to load
+Sys.setlocale("LC_ALL","English") # for date formats
+```
+
+
+```{r}
+# for copying
+```
+
+
+# Background
+The study population includes all herd and animals from 2010-2020 registered in the Danish Cattle Database.
+Danish dairy cattle in industrialized production PCR tested for dry off treatments, ultimately all dairy cattle in western world productions PCR tested for dry off treatments.
+
+Investigating PCR testing as part of descriptive analysis for an overall study:
+
+# Materials and methods
+
+## Herds and animals
+
+
+## Data analysis
+
+Carried out in R 4.0.3
+
+### Loading data
+Do not include R code. Only describe what is done..
+
+Or instead load the R workspace from paper_1 cleaning.... That would be better. Then link to the github page where the cleaning script is uploaded...
+
+```{r, echo=FALSE}
+# PCR recording
+vetrespcr  <- fread("M:/data/vetrespcrNY.csv")
+vetresdyr  <- fread("M:/data/vetresdyrNY.csv") 
+vetpcrkode    <- fread("M:/data/vetpcrkode.csv")
+
+# diseases:
+sundhed    <- fread("M:/data/sundhed.csv")
+lksygdomskode <- read.csv("lksygdomskode_fixed.csv") # debugged: See script in data folder
+
+```
+
+
+Basic cleaning: Do not include R code, just desribe basic scripts and merging
+Maybe include a short glimpse of the final vetpcr??
+
+```{r, echo=FALSE}
+# vetrespcr
+vetrespcr <- subset(vetrespcr, select= c(VETPCRKD_ID, VETRESDYR_ID, ANALYSEDATAEJAFR))
+vetrespcr <- vetrespcr[!is.na(vetrespcr$VETRESDYR_ID), ] #remove NA
+
+# vetresdyr
+vetresdyr <- subset(vetresdyr, VETPRTYPE_ID == 10 ) #keep only PCR
+vetresdyr <- subset(vetresdyr, select=c(ID, DYR_ID, UDTAGDATO))
+names(vetresdyr) <- c("VETRESDYR_ID","DYR_ID", "UDTAGDATO")
+vetresdyr <- vetresdyr[, UDTAGDATO:=as.Date(UDTAGDATO)]
+vetresdyr <- subset(vetresdyr, UDTAGDATO > as.Date("2009-12-31") ) # we only want data from 2010
+
+# create vetpcr by merging vetrespcr and vetresdyr
+vetpcr <- merge(vetresdyr, vetrespcr, by="VETRESDYR_ID", sort=TRUE, allow.cartesian=TRUE)
+vetpcr <- subset(vetpcr, select=-c(VETRESDYR_ID))
+
+# # keep the 4 pathogens for dry-off treatment test
+# vetpcr <- subset(vetpcr,VETPCRKD_ID == 1| VETPCRKD_ID ==6| VETPCRKD_ID == 8| 
+#                    VETPCRKD_ID == 9| VETPCRKD_ID == 20| VETPCRKD_ID == 21|VETPCRKD_ID == 23)
+# vetpcr$VETPCRKD_ID <- as.factor(vetpcr$VETPCRKD_ID)
+# levels(vetpcr$VETPCRKD_ID) <- c("s.aureus", "s.dys", "B.strep", 
+#                                 "s.uberis", "B.strep", "s.uberis", "s.dys")
+# names(vetpcr) <- c("DYR_ID", "PCR_DATE", "PATHOGEN", "PCR_VALUE")
+# # above will be rewritten using grepl:
+# # vetpcrkode[grepl("aureus", NAVNKORT) | grepl("uberis", NAVNKORT) |
+# #              grepl("agalactiae", NAVN) | grepl("strep", NAVNKORT), ID]
+# # vetpcr_test    <- subset(vetpcr, subset = LKSK_ID%in%lksygdomskode$ID[grepl("Goldningsbehandling",lksygdomskode$LKSYGTEKST)])
+# rm(vetresdyr); rm(vetrespcr); rm(vetpcrkode) # discard unneeded pcr files, keep vetpcr
+
+# Diseases
+sundhed[, SYGDOMSDATO:=as.Date(SYGDOMSDATO)]
+sundhed <- subset(sundhed, SYGDOMSDATO > as.Date("2009-12-31") )
+# Keep only goldning treatment, based on code in "lksygdomskode"
+sundhed <- subset(sundhed, subset = LKSK_ID%in%lksygdomskode$ID[grepl("Goldningsbehandling",lksygdomskode$LKSYGTEKST)])
+
+```
+
+### Descriptive analysis
+
+#### Yearly records:
+
+PCR testing:
+```{r}
+# PCR tests per year:
+vetpcr_year <- subset(vetpcr, select = c(DATO))
+vetpcr_year$DATO = format(as.Date(vetpcr_year$DATO, format='%Y-%m-%d'),'%Y')
+vetpcr_year <- stack(table(vetpcr_year))[2:1]
+# renaming columns
+vetpcr_year <- vetpcr_year %>%
+  rename(
+    year = ind,
+    PCR_tests = values
+  )
+```
+
+Treatments at dry-off:
+```{r}
+# PCR tests per year:
+sundhed_year <- subset(sundhed, select = c(DATO))
+sundhed_year$DATO = format(as.Date(sundhed_year$DATO, format='%Y-%m-%d'),'%Y')
+sundhed_year <- stack(table(sundhed_year))[2:1]
+# renaming columns
+sundhed_year <- sundhed_year %>%
+  rename(
+    year = ind,
+    Treatments = values
+  )
+```
+
+Other to include:
+
++ POS vs NEg vs SCC (this would include yktr data..)
+
+# Results
+
+
+
+# Discussion / Conclusion
