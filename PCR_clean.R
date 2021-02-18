@@ -82,7 +82,7 @@ dyrinfo <- dyrinfo %>%
 
 racekode <- racekode %>%
   dplyr::select(ID, RACENAVN) %>%
-  rename(RACE_ID = ID, BREED = RACENAVN )
+  rename(RACE_ID = ID, RACE = RACENAVN )
 
 # join racekode and dyrinfo to create breed:
 breed <- left_join(dyrinfo, racekode , by = "RACE_ID") %>%
@@ -103,8 +103,6 @@ production <- yktr %>%
   filter(KGMAELK > 0) %>%
   filter(KGMAELK < 100) %>%
   filter(KONTROLDATO > as.Date("2009-12-31")) %>%
-  mutate(IMI = case_when(CELLETAL < 200 ~ 0, CELLETAL >= 200 ~ 1)) %>%
-  mutate(IMI = factor(IMI)) %>%
   rename(SCC = CELLETAL, MILK = KGMAELK)
 
 rm(yktr); gc()
@@ -119,8 +117,7 @@ calvings <- kaelvninger %>%
   dplyr::select(DYR_ID, KAELVEDATO, KAELVNINGSNR) %>%
   filter(KAELVEDATO > as.Date("2009-12-31")) %>%
   drop_na() %>%
-  rename(CALVING_DATE = KAELVEDATO, PARITY = KAELVNINGSNR) %>%
-  mutate(PARITY = factor(PARITY))
+  rename(CALVING_DATE = KAELVEDATO, PARITY = KAELVNINGSNR)
 
 rm(kaelvninger); gc()
 
@@ -133,7 +130,7 @@ AB_treatments <- AB_treatments %>%
   dplyr::select(-LKSYGTEKST, -n, -UsesAB, -UsesAB2, -Comment)
 
 lksygdomskode <- full_join(lksygdomskode, AB_treatments, by = "LKSYGKODE", sort="TRUE",allow.cartesian=TRUE) %>% 
-  dplyr::slice(1:241)
+  dplyr::slice(1:241) # remove duplicates
 
 treatments <- sundhed %>%
   filter(SYGDOMSDATO > as.Date("2009-12-31")) %>%
@@ -152,6 +149,8 @@ rm(sundhed, lksygdomskode, AB_treatments); gc()
 
 str(goldninger) # Goldingsdate is in date format
 
+dplyr::n_distinct(goldninger$BES_ID) # 3179 (appr. 600 less than in yktr)
+
 dryoff <- goldninger %>%
   filter(GOLDNINGSDATO > as.Date("2009-12-31")) %>%
   dplyr::select(DYR_ID, GOLDNINGSDATO) %>%
@@ -159,6 +158,7 @@ dryoff <- goldninger %>%
   rename(DRYOFF_DATE = GOLDNINGSDATO)
 
 rm(goldninger); gc()
+
 
 #------------------------------------------------------------
 # brugsart -> herd, eco vs con
@@ -175,8 +175,8 @@ brugsartkode <- brugsartkode %>%
   dplyr::select(ID, BRUGSARTTEKST) %>%
   rename(HERD_TYPE = BRUGSARTTEKST) %>%
   mutate(HERD_TYPE = if_else(str_detect(HERD_TYPE, pattern = "logisk$"), "eco", HERD_TYPE)) %>%
-  mutate(HERD_TYPE = if_else(str_detect(HERD_TYPE, pattern = "lk"), "con", HERD_TYPE)) %>%
-  mutate(HERD_TYPE = factor(HERD_TYPE))
+  mutate(HERD_TYPE = if_else(str_detect(HERD_TYPE, pattern = "lk"), "con", HERD_TYPE))
+
 
 # create herd dataset by joining code and brugsart:
 herd <- left_join(brugsart, brugsartkode , by = "ID") %>%
@@ -186,7 +186,8 @@ herd <- left_join(brugsart, brugsartkode , by = "ID") %>%
 rm(brugsart, brugsartkode); gc()
 
 #-----------------------------------------------------------
-# check classes (and convert if needed) for each variable:
+# check classes for each variable:
+# (note: better to wait changing to factors after joining)
 
 str(breed)
 str(calvings)
