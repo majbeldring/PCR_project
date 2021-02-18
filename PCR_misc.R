@@ -193,6 +193,15 @@ test %>%
 
 # df3$DIM <- as.period(interval(df3$KONTROLDATO, df3$CALVING_DATE)) # not working
 
+# DIM - add days in milk, 
+df4$DIM <- as.Date(as.character(df4$KONTROLDATO), format="%Y-%m-%d")-
+  as.Date(as.character(df4$CALVING_DATE), format="%Y-%m-%d")
+
+# drop duplicates with overlapping DIM
+df4 <- df4 %>% 
+  arrange(DYR_ID, KONTROLDATO, desc(CALVING_DATE)) %>%
+  distinct(DYR_ID, KONTROLDATO, .keep_all = TRUE)
+
 #----------------------------------------------------------
 # create logSCC and tSCC and logtSCC
 df13 <- df12 %>%
