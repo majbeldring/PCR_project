@@ -24,21 +24,19 @@ load("M:/PCR_data/PCR_clean.RData")
 # Breed:
 
 breed <- breed %>% 
-  mutate(BREED = if_else(str_detect(BREED, pattern = "Holstein"), "holstein", BREED)) %>%
-  mutate(BREED = if_else(str_detect(BREED, pattern = "Jersey"), "jersey", BREED)) %>%
-  mutate(BREED = if_else(str_detect(BREED, pattern = "broget"), "other", BREED)) %>%
-  mutate(BREED = if_else(str_detect(BREED, pattern = "alkerace$"), "other", BREED)) %>%
-  mutate(BREED = if_else(str_detect(BREED, pattern = "Krydsning"), "other", BREED))
+  mutate(RACE = if_else(str_detect(RACE, pattern = "Holstein"), "holstein", RACE)) %>%
+  mutate(RACE = if_else(str_detect(RACE, pattern = "Jersey"), "jersey", RACE)) %>%
+  mutate(RACE = if_else(str_detect(RACE, pattern = "broget"), "other", RACE)) %>%
+  mutate(RACE = if_else(str_detect(RACE, pattern = "alkerace$"), "other", RACE)) %>%
+  mutate(RACE = if_else(str_detect(RACE, pattern = "Krydsning"), "other", RACE))
 
-breed <- dplyr::filter(breed, grepl('holstein|jersey|other', BREED)) #keep only 3
+breed <- dplyr::filter(breed, grepl('holstein|jersey|other', RACE)) #keep only 3
 
 # add coloumn to breed wit numerious values:
 breed <- breed %>% 
-  mutate(BREED_BI = case_when(BREED == "holstein" ~ 1, 
-                              BREED == "jersey" ~ 2, 
-                              BREED == "other" ~ 3)) %>%
-  mutate(BREED = factor(BREED)) %>%
-  mutate(BREED_BI = factor(BREED_BI))
+  mutate(BREED = case_when(RACE == "holstein" ~ 1, 
+                              RACE == "jersey" ~ 2, 
+                              RACE == "other" ~ 3)) 
 
 #-------------------------------------------------------------------------------
 # vetpcr- > major : four major pathogens
@@ -56,8 +54,7 @@ major <- major %>%
   relocate(DYR_ID, PCR_DATE, PCR_VALUE, PATHOGEN)
 
 major <- major %>% 
-  rename(MAJOR = PATHOGEN) %>%
-  mutate(MAJOR = factor(MAJOR))
+  rename(MAJOR = PATHOGEN)
 
 # create pcr data with only 1 PCR_VALUE per animal per test date. Keeping only the lowest value, as the lower the more POS, 
 major <- major %>% 
@@ -65,8 +62,8 @@ major <- major %>%
   arrange(DYR_ID, PCR_DATE, PCR_VALUE) %>%
   distinct(DYR_ID, PCR_DATE, .keep_all = TRUE) %>%
   mutate(RES_MAJOR = case_when(PCR_VALUE < 37 ~ 1, PCR_VALUE >= 37 ~ 0)) %>%
-  dplyr::select(DYR_ID, PCR_DATE, RES_MAJOR, MAJOR) %>%
-  mutate(RES_MAJOR = factor(RES_MAJOR))
+  rename(PCR_MAJOR = PCR_VALUE) %>%
+  dplyr::select(DYR_ID, PCR_DATE, PCR_MAJOR, RES_MAJOR, MAJOR) 
 
 glimpse(major)
 dplyr::n_distinct(major$DYR_ID)  # 459.337 unique DYR_ID pcr (one less than in vetpcr)
@@ -77,8 +74,7 @@ dplyr::n_distinct(major$DYR_ID)  # 459.337 unique DYR_ID pcr (one less than in v
 minor <- dplyr::filter(vetpcr, !grepl('aureus|uberis|dysgalactiae|B-strep', PATHOGEN)) 
 
 minor <- minor %>% 
-  rename(MINOR = PATHOGEN) %>%
-  mutate(MINOR = factor(MINOR))
+  rename(MINOR = PATHOGEN) 
 
 # create pcr data with only 1 PCR_VALUE per animal per test date. Keeping only the lowest value, as the lower the more POS, 
 minor <- minor %>% 
@@ -86,8 +82,8 @@ minor <- minor %>%
   arrange(DYR_ID, PCR_DATE, PCR_VALUE) %>%
   distinct(DYR_ID, PCR_DATE, .keep_all = TRUE) %>%
   mutate(RES_MINOR = case_when(PCR_VALUE < 37 ~ 1, PCR_VALUE >= 37 ~ 0)) %>%
-  dplyr::select(DYR_ID, PCR_DATE, RES_MINOR, MINOR) %>%
-  mutate(RES_MINOR = factor(RES_MINOR))
+  rename(PCR_MINOR = PCR_VALUE) %>%
+  dplyr::select(DYR_ID, PCR_DATE, PCR_MINOR, RES_MINOR, MINOR) 
 
 glimpse(minor)
 dplyr::n_distinct(minor$DYR_ID)  # 459197 unique DYR_ID pcr 
@@ -97,8 +93,7 @@ dplyr::n_distinct(minor$DYR_ID)  # 459197 unique DYR_ID pcr
 
 pcr <- inner_join(major, minor, sort="TRUE",allow.cartesian=TRUE)
 pcr <- pcr %>%
-  add_column(PCR_TEST = 1) %>%
-  mutate(PCR_TEST = factor(PCR_TEST))
+  add_column(PCR_TEST = 1) 
 
 #------------------------------------------------------------------------------
 # vetpcr- > pcr_full: all pathogens from PCR tests
@@ -111,16 +106,13 @@ pcr_full <- vetpcr %>%
   mutate(PATHOGEN = if_else(str_detect(PATHOGEN, pattern = "B-strep$"), "B.strep", PATHOGEN)) %>% 
   mutate(PATHOGEN = if_else(str_detect(PATHOGEN, pattern = "Gaer$"), "yeast", PATHOGEN)) %>% 
   relocate(DYR_ID, PCR_DATE, PCR_VALUE, PATHOGEN) %>%
-  mutate(PATHOGEN = factor(PATHOGEN))  %>%
-  add_column(PCR_test = 1) %>%
-  mutate(PCR_test = factor(PCR_test))
+  add_column(PCR_test = 1)
 
-# create POS/NEG coloumn
+# Keep selected coloumns and create POS/NEG:
 pcr_full <- pcr_full %>% 
   dplyr::select(DYR_ID, PCR_test, PCR_DATE, PCR_VALUE, PATHOGEN) %>%
   mutate(RES = case_when(PCR_VALUE < 37 ~ 1, PCR_VALUE >= 37 ~ 0)) %>%
-  dplyr::select(DYR_ID, PCR_test, PCR_DATE, RES, PATHOGEN) %>%
-  mutate(RES = factor(RES))
+  dplyr::select(DYR_ID, PCR_test, PCR_DATE, PCR_VALUE, RES, PATHOGEN) 
 
 
 # pcr_major, pcr_minor, pcr_all replaces vetpcr
@@ -134,7 +126,6 @@ gc()
 dryoff_treat <- dplyr::filter(treatments, grepl('Goldningsbehandling', DISEASE))
 dryoff_treat <- dryoff_treat %>% 
   mutate(DRY_TREAT = case_when(DISEASE == "Goldningsbehandling" ~ 1)) %>% 
-  mutate(DRY_TREAT = factor(DRY_TREAT)) %>%
   rename(DRYTREAT_DATE = TREATMENT_DATE) %>%
   dplyr::select(-DISEASE, -AB)
 
@@ -142,7 +133,6 @@ dryoff_treat <- dryoff_treat %>%
 teat_treat <- dplyr::filter(treatments, grepl('pattelukning', DISEASE))
 teat_treat <- teat_treat %>% 
   mutate(TEAT_TREAT = case_when(DISEASE == "Intern pattelukning" ~ 1)) %>% 
-  mutate(TEAT_TREAT = factor(TEAT_TREAT)) %>%
   rename(TEAT_DATE = TREATMENT_DATE) %>%
   dplyr::select(-DISEASE, -AB)
 
@@ -152,7 +142,6 @@ teat_treat <- teat_treat %>%
 other_treat <- dplyr::filter(treatments, !grepl('pattelukning|Goldningsbehandling', DISEASE))
 other_treat <- other_treat %>% 
   rename(OTHER_AB_DATE = TREATMENT_DATE, OTHER_AB = AB) %>%
-  mutate(OTHER_AB = factor(OTHER_AB))%>%
   dplyr::select(-DISEASE)
 
 str(other_treat)
@@ -164,4 +153,5 @@ gc()
 # save cleaned data:
 
 save.image("M:/PCR_data/PCR_prepare.RData")
+
 
