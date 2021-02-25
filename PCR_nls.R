@@ -3,9 +3,9 @@
 # Maj Beldring Henningsen, majbh@sund.ku.dk
 
 # PCR_nls for PCR project
-# nls / Wilmink raw
+# nls / Wilmink and wood curves for article
 
-
+# 
 
 #-------------------------------------------------------
 # Packages and settings:
