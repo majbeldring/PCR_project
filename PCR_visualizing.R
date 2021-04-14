@@ -1,6 +1,11 @@
 
 # Maj Beldring, majbh@sund.ku.dk
-# Descriptive analysis for PCR (epi 2 course)
+# Descriptive analysis for PCR project
+
+# 2x2 tables etc
+# (curves/ecdf etc are found in PCR_curves)
+
+# MISSING: ecdf plot (done in PCR_model1)
 
 #-------------------------------------------------------
 # Packages and settings:
@@ -13,11 +18,10 @@ Sys.setlocale("LC_ALL","English") # data formatting
 # Loading data:
 load("M:/PCR_data/PCR_merge.RData")
 
-# to do>
-# ecdf plot
+
 
 #-------------------------------------------------------------------
-################# TEST DATA VISUALIZATION ##########################
+# TEST DATA VISUALIZATION 
 
 
 #df_test <- sample_n_by(df_test1, BREED, size = 300, replace = FALSE)
@@ -77,8 +81,13 @@ ggplot(df_test, aes(x=logSCCpre, y=logSCC, col=PARITY)) +
   geom_smooth(method='lm') +
   facet_wrap( ~ TREATED)
 
+
+
+
+
 #--------------------------------------------------------------------
-# PCR results major pathogens vs treatments;
+# table: PCR results major pathogens vs treatments;
+
 
 table_treated <- table(df_pcr$RESULT, df_pcr$TREATED) # A = rows, B = columns
 table_treated
@@ -89,8 +98,11 @@ table_test<- table(df_test$BREED,df_test$PARITY) # A = rows, B = columns
 table_test
 
 
+
+
 #---------------------------------------------------------------------
-# table TEAT vs IMI
+# table: TEAT vs IMI
+
 
 table_teat <- table(df_pcr$TEAT, df_pcr$IMI) # A = rows, B = columns
 table_teat
@@ -128,11 +140,14 @@ grid.arrange(p1, p2, ncol=2) # SCCpre & SCCpost vs TEAT treatment
 
 # straitfy by parity:
 
+
+
+
 #------------------------------------------------------------
-###################### BIG DATA ##############################
+# BIG DATA various plots
+
 
 # distributions SCC and SCCpre - we see here why log transforming SCC
-# Not log:
 ggplot(df_pcr, aes(x=SCC)) +
   geom_histogram(binwidth=.5, colour="darkblue", fill="white")
 ggplot(df_pcr, aes(x=SCCpre)) +
@@ -242,8 +257,12 @@ df_pcr %>%
             position = position_dodge(width = 0.9),
             vjust = 1.5)
 
+
+
+
+
 #--------------------------------------------------------------
-############### boxplot BIG DATA #############################
+# boxplot BIG DATA 
 
 # SCCpre vs Control month
 ggplot(df_pcr, aes(x=as.factor(SCC_MONTH), y=logSCCpre, col=SCC_MONTH)) +

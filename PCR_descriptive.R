@@ -19,7 +19,7 @@ load("M:/data/PCR_clean.RData")
 # notes:
 
 # use table to check:
-#table(df$breed, df$sex)
+# table(df$breed, df$sex)
 
 #---------------------------------------------------------
 # count population:
@@ -39,26 +39,30 @@ dplyr::n_distinct(df_pcr$BES_ID)        # 1474 unique BES_ID herd
 #---------------------------------------------------------
 # popualation numbers, outcome variable and predictor variables:
 
+# count average SCC1, SCC2, tSCC and MILK1
+summary(df_pcr)
+
 # DYR_ID and BES_ID:
 dplyr::n_distinct(df_pcr$DYR_ID)  # 318886 DYR_ID
 
 # animals in each parity, 2,3,4
-pcr1_parity <- pcr1 %>%
+pcr_parity1 <- df_pcr %>%
   n_distinct(DYR_ID) %>%
   n_distinct(BES_ID)
 
-# animals in each breed, 1,2,3,4,5,6
-# filter by group..
-#breed_count_test <- breed_test %>% count(BREED, sort = TRUE)
+#-----------------------------------------------
+# mean and CI
 
-# count average SCC1, SCC2, tSCC and MILK1
-summary(df_pcr)
+df_summaries1 <- df_pcr %>%
+  mutate(variable = SCC) %>%
+  group_by(PARITY) %>%
+  summarise(Mean = mean(variable), StdDev = sqrt(var(variable)), min = min(variable), q1 = quantile(variable, prob=0.25))
+df_summaries1
 
-# count PCR tests
+df_summaries2 <- df_pcr %>%
+  mutate(variable = SCC) %>%
+  group_by(BREED) %>%
+  summarise(Mean = mean(variable), StdDev = sqrt(var(variable)), min = min(variable), q1 = quantile(variable, prob=0.25))
+df_summaries2
 
-# count treatments at dry-off
 
-# count calvings
-
-#### IMPORT population description from Epi files.... All population desctiption are found there...
-# update and upload

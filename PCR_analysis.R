@@ -8,7 +8,6 @@
 ## us na.omit when modelling coloumns that can include NAs...
 
 # analysis to do:
-## include PATHOGEN in model
 ## glm on pcr and scc as binominal output
 ## drop1 (F test) for model testing, lowest AIC
 ## predict.glm for results (summary)
@@ -114,7 +113,7 @@ AIC(lm1,lm2) # lowest AIC is the best = lm2
 AIC(lm2, lm3) # same, so lm2 and lm3 is the same...
 AIC (lm2, lm4) # lowest AIC is the best = lm2 - so better with interaction
 
-# Output: Not sure all these are needed. Check what Søren uses
+# Output: Not sure all these are needed. Check what S?ren uses
 summary(lm1)            # OR= 
 anova(lm1,test='Chisq') # df= , p value: 
 confint(lm1)            # CI 95%: 
