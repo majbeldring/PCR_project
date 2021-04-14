@@ -5,6 +5,9 @@
 # PCR_prepare: Preparing cleaned data for merging
 # Script #2 in PCR project
 
+# to do:
+### include klebsiella and e. coli in majors: ask Line for others
+
 #-------------------------------------------------------
 # Packages and settings:
 

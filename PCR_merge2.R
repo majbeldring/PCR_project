@@ -6,7 +6,12 @@
 # full data WITHOUT dryoff dates from "goldninger" data
 
 # to do:
-## include next calving data (post_calving_date); for easier joining
+## include next calving data (post_calving_date); for easier joining 
+## from _temp: Evaluate pcr tests (should there be a CNS coloumn?)
+## from _temp: res_minor and res_major: Factor with either 0 or 1.
+## include seasonal effect based on KONTROLDATO as a coloumn (e.g. winter/summer)
+## create AB_LAC for all AB treatments during lac phase (and AB_dry for dry off phase)
+
 
 
 # merge2 timeline:
@@ -23,7 +28,7 @@ library(tidyverse)
 library(lubridate) # for date wrangling
 memory.size()            # Checking your memory size
 memory.limit()           # Checking the set limit
-memory.limit(size=75000) # suggest for 64 bit: size=5600
+memory.limit(size=56000) # suggest for 64 bit: size=56000
 
 
 # Loading data: 
@@ -350,11 +355,39 @@ df_pcr <- df_pcr %>%
   mutate(IMI = case_when(SCCpost < 200 ~ 0, SCCpost >= 200 ~ 1)) %>%
   mutate(IMI = factor(IMI))
 
-# remove date variables and place variables in order:
+
+
+# df_model: remove date variables and keep Parity 2,3,4+:
 df_model <- df_pcr %>%
-  dplyr::select(DYR_ID, BES_ID, HERDTYPE, BREED, PARITY, 
+  dplyr::select(DYR_ID, BES_ID, HERDTYPE, BREED, PARITY, DIM, 
                 SCC, logSCC, SCCpost, IMI, MILK, 
                 PCR_TEST, RES_MAJOR, RES_MINOR, DRY_TREAT, OTHER_AB, TEAT_TREAT)
+
+df_model <- df_model %>%
+  filter(logSCC > 0) %>%
+  filter(PARITY > 1)
+
+df_model <- df_model %>% 
+  mutate(
+  PARITY = as.numeric(PARITY),
+  PARITY = replace(PARITY, PARITY > 3, 4),
+  PARITY = as.factor(PARITY))
+
+df_model <- df_model %>%
+  mutate(BREED = factor(BREED)) %>%
+  mutate(HERDTYPE = factor(HERDTYPE))
+
+# create with herds with min 50 animals and 200 obs.
+df_model <- df_model %>%
+  group_by(BES_ID) %>%
+  filter(n() > 200)
+
+# df_model <- df_model %>%
+#   filter(length(BES_ID) > 50)
+
+df_model <- df_model %>%
+  mutate(BES_ID = factor(BES_ID))
+# don't do it with DYR_ID. Not needed for now. Data must be smaller for this
 
 
 #------------------------------------------------------------------------
@@ -367,29 +400,32 @@ save.image("M:/PCR_data/PCR_merge2.RData")
 
 
 #------------------------------------------------------------------
-# preparation
-
-# save.image("M:/PCR_data/PCR_merge2_temp.RData")  # includes join of df10 and df11
+# preparation to be applied in modelling scripts
 
 # removing first 5 DIM (not saved. Do this in model/descriptives scripts)
 df_pcr <- df_pcr %>%
   filter(DIM > 5)
 
-# df_curve & df_pcr: change all parities >3 to 4 (not saved: do it in scripts)
-df_pcr <- df_pcr %>% mutate(
-  PARITY = as.numeric(PARITY),
-  PARITY = replace(PARITY, PARITY > 3, 4),
-  PARITY = as.factor(PARITY)
-)
 
+# convert BES_ID and DR_ID to factors
+df_model <- df_model %>%
+  mutate(BES_ID = factor(BES_ID)) %>%
+  mutate(DYR_ID = factor(DYR_ID)) %>%
+
+  
 df_curve <- df_curve %>%
-  dplyr::select(DYR_ID, BES_ID, HERDTYPE, BREED, PARITY,
+  dplyr::select(DYR_ID, BES_ID, DIM, HERDTYPE, BREED, PARITY,
                 SCC, logSCC, IMI, MILK)
 
 # create with herds with min 50 animals and 200 obs.
 df_model1 <- df_all %>%
   group_by(BES_ID, DYR_ID) %>%
   filter(n() > 200)
+
+# create coloumn counting herd occurences
+df <- df %>%
+  group_by(BES_ID, PARITY) %>%
+  mutate(count = n())
 
 
 
