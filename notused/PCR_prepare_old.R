@@ -47,36 +47,6 @@ breed <- breed %>%
 str(vetpcr)
 
 # keeping only pcr pathogens. Recall: agalactiae = B.strep
-major4 <- dplyr::filter(vetpcr, grepl('aureus|uberis|dysgalactiae|B-strep', PATHOGEN)) 
-
-major4 <- major4 %>% 
-  mutate(PATHOGEN = if_else(str_detect(PATHOGEN, pattern = "dysgalactiae$"), "s.dys", PATHOGEN)) %>%
-  mutate(PATHOGEN = if_else(str_detect(PATHOGEN, pattern = "uberis$"), "s.uberis", PATHOGEN)) %>%
-  mutate(PATHOGEN = if_else(str_detect(PATHOGEN, pattern = "aureus$"), "s.aureus", PATHOGEN)) %>%
-  mutate(PATHOGEN = if_else(str_detect(PATHOGEN, pattern = "B-strep$"), "B.strep", PATHOGEN)) %>% # B.strep = s. agalactiae
-  relocate(DYR_ID, PCR_DATE, PCR_VALUE, PATHOGEN)
-
-major4 <- major4 %>% 
-  rename(MAJOR = PATHOGEN)
-
-# create pcr data with only 1 PCR_VALUE per animal per test date. Keeping only the lowest value, as the lower the more POS, 
-major4 <- major4 %>% 
-  dplyr::select(DYR_ID, PCR_DATE, PCR_VALUE, MAJOR) %>%
-  arrange(DYR_ID, PCR_DATE, PCR_VALUE) %>%
-  distinct(DYR_ID, PCR_DATE, .keep_all = TRUE) %>%
-  mutate(RES_MAJOR4 = case_when(PCR_VALUE < 37 ~ 1, PCR_VALUE >= 37 ~ 0)) %>%
-  rename(PCR_MAJOR4 = PCR_VALUE) %>%
-  dplyr::select(DYR_ID, PCR_DATE, PCR_MAJOR4, RES_MAJOR4, MAJOR) 
-
-glimpse(major4)
-dplyr::n_distinct(major4$DYR_ID)  # 459.337 unique DYR_ID pcr (one less than in vetpcr)
-
-#-------------------------------------------------------------------------------
-# vetpcr- > major : All the "normal" mastitis pathogens.
-
-str(vetpcr)
-
-# keeping only pcr pathogens. Recall: agalactiae = B.strep
 major <- dplyr::filter(vetpcr, grepl('aureus|uberis|dysgalactiae|B-strep', PATHOGEN)) 
 
 major <- major %>% 
@@ -101,6 +71,7 @@ major <- major %>%
 glimpse(major)
 dplyr::n_distinct(major$DYR_ID)  # 459.337 unique DYR_ID pcr (one less than in vetpcr)
 
+#-------------------------------------------------------------------------------
 # vetpcr- > minor : PCR result for non of the four major pathogens
 
 minor <- dplyr::filter(vetpcr, !grepl('aureus|uberis|dysgalactiae|B-strep', PATHOGEN)) 
